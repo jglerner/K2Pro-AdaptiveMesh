@@ -26,6 +26,8 @@ A 10mm padding is added around the print area, clamped to bed limits (10-290mm).
 - Bed has a natural dome shape (~0.65mm center-to-edge), well compensated by bicubic mesh
 - Adaptive area mesh showed Range: 0.153mm vs 0.65mm for full bed — much more accurate for the print zone
 
+![Adaptive bed mesh result](Bed_meshCalibrate.png)
+
 ## Installation
 1. Copy the macro from `adaptive_bed_mesh.cfg` into your `macro.cfg`
 2. In `START_PRINT`, replace `BED_MESH_PROFILE LOAD=default` — see `START_PRINT_change.txt`
