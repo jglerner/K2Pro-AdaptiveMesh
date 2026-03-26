@@ -1,0 +1,4 @@
+; Orca Slicer - Machine start G-code
+; Replace your existing START_PRINT line with this one:
+
+START_PRINT EXTRUDER_TEMP=[initial_layer_temperature] BED_TEMP=[bed_temperature] PRINT_MIN_X={first_layer_print_min[0]} PRINT_MIN_Y={first_layer_print_min[1]} PRINT_MAX_X={first_layer_print_max[0]} PRINT_MAX_Y={first_layer_print_max[1]}

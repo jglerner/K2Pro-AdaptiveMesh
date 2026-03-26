@@ -1,0 +1,7 @@
+; In your START_PRINT macro (macro.cfg), replace:
+;
+;     BED_MESH_PROFILE LOAD=default
+;
+; With:
+;
+;     ADAPTIVE_BED_MESH PRINT_MIN_X={params.PRINT_MIN_X|default(10)|float} PRINT_MIN_Y={params.PRINT_MIN_Y|default(10)|float} PRINT_MAX_X={params.PRINT_MAX_X|default(290)|float} PRINT_MAX_Y={params.PRINT_MAX_Y|default(290)|float}
