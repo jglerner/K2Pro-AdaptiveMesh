@@ -73,9 +73,7 @@ With:
 
 In **Printer Settings → Machine G-code → Machine start G-code**, update your `START_PRINT` line:
 
-    START_PRINT EXTRUDER_TEMP=[initial_layer_temperature] BED_TEMP=[bed_temperature] PRINT_MIN_X={first_layer_print_min[0]} PRINT_MIN_Y={first_layer_print_min[1]} PRINT_MAX_X={first_layer_print_max[0]} PRINT_MAX_Y={first_layer_print_max[1]}
-
-Orca Slicer already calculates these coordinates — we're just passing them through.
+    START_PRINT EXTRUDER_TEMP=[first_layer_temperature] BED_TEMP=[bed_temperature]
 
 ---
 

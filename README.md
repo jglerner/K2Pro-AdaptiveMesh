@@ -104,7 +104,7 @@ This makes OrcaSlicer emit `EXCLUDE_OBJECT_DEFINE` statements at the top of each
 In **Printer Settings → Machine G-code → Machine start G-code**, use:
 
 ```
-START_PRINT EXTRUDER_TEMP=[initial_layer_temperature] BED_TEMP=[bed_temperature]
+START_PRINT EXTRUDER_TEMP=[first_layer_temperature] BED_TEMP=[bed_temperature]
 ```
 
 **Do not** pass `{first_layer_print_min[0]}` or similar vector variables here — OrcaSlicer's machine start G-code parser rejects that syntax and errors before generating the file.
