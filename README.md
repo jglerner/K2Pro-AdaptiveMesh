@@ -2,7 +2,7 @@
 
 A Klipper macro for the **Creality K2 Pro** that runs a **9×9 bed mesh calibration sized to the model's footprint**, with a 9 mm margin on each side.
 
-No KAMP. No Moonraker plugin. No `[exclude_object]` dependency.
+No KAMP plugin. No Moonraker dependency. Uses Klipper's built-in `[exclude_object]` module (already present on the K2 Pro).
 
 ![Adaptive bed mesh result](Bed_meshCalibrate.png)
 
@@ -32,15 +32,22 @@ Measured result: **range dropped from 0.65 mm (full bed) to 0.153 mm (adaptive a
 
 ## How it works
 
-The macro:
+The macro derives the print area from Klipper's `[exclude_object]` data — the same object polygon information OrcaSlicer emits when "Label objects" is enabled. This avoids passing slicer vector variables (`{first_layer_print_min[0]}`) in machine start G-code, which OrcaSlicer rejects with a parse error before the file ever reaches the printer.
+
+**Area detection priority:**
+
+1. `printer.exclude_object.objects` polygon data (preferred)
+2. Explicit `PRINT_MIN_X/Y` + `PRINT_MAX_X/Y` params (legacy / manual calls)
+3. Full 10–290 mm bed mesh (no area data available)
+
+**Then the macro:**
 
 1. **Preheats** — bed to **40 °C**, extruder to **140 °C** — before probing.
    - 40 °C stabilises the bed surface geometry without the full thermal expansion of print temperatures.
    - 140 °C softens any residual filament on the nozzle so it does not drag across the surface, but is too cold to drip.
-2. **Homes** all axes (`G28`).
-3. Expands the model bounding box by **9 mm on each side**, clamped to bed limits (10–290 mm).
-4. Runs `BED_MESH_CALIBRATE` over that region with `PROBE_COUNT=9,9`.
-5. Saves the result to the `default` profile.
+2. Expands the model bounding box by **9 mm on each side**, clamped to bed limits (10–290 mm).
+3. Runs `BED_MESH_CALIBRATE` over that region with `PROBE_COUNT=9,9`.
+4. Saves the result to the `default` profile.
 
 After the macro completes, `START_PRINT` heats to full print temperatures and begins the print.
 
@@ -48,12 +55,27 @@ After the macro completes, `START_PRINT` heats to full print temperatures and be
 
 ## Installation
 
-### 1. Add the macro
+### 1. Verify `[exclude_object]` is in printer.cfg
 
-Copy the contents of `adaptive_bed_mesh.cfg` into your `macro.cfg`
-(located at `/mnt/UDISK/printer_data/config/macro.cfg` on the K2 Pro).
+The K2 Pro ships with this already. Confirm with Ctrl+F in your config editor:
 
-### 2. Update START_PRINT
+```ini
+[exclude_object]
+```
+
+If it is missing, add it as a standalone section anywhere in `printer.cfg`.
+
+### 2. Add the macro
+
+Copy `adaptive_bed_mesh.cfg` to `/mnt/UDISK/printer_data/config/` and add this line to `printer.cfg`:
+
+```ini
+[include adaptive_bed_mesh.cfg]
+```
+
+Or copy the contents directly into your `macro.cfg`.
+
+### 3. Update START_PRINT
 
 In your `START_PRINT` macro, replace:
 
@@ -61,25 +83,33 @@ In your `START_PRINT` macro, replace:
 BED_MESH_PROFILE LOAD=default
 ```
 
-With (on a **single line**):
+With:
 
 ```
-ADAPTIVE_BED_MESH PRINT_MIN_X={params.PRINT_MIN_X|default(10)|float} PRINT_MIN_Y={params.PRINT_MIN_Y|default(10)|float} PRINT_MAX_X={params.PRINT_MAX_X|default(290)|float} PRINT_MAX_Y={params.PRINT_MAX_Y|default(290)|float}
+ADAPTIVE_BED_MESH
 ```
 
-> Because the macro now includes its own `G28` and preheat, remove or move any `G28` that previously ran before `BED_MESH_PROFILE LOAD=default` in `START_PRINT`.
+No parameters needed — the macro reads the print area automatically.
 
-### 3. Update Orca Slicer
+> Remove any `G28` that previously ran before `BED_MESH_PROFILE LOAD=default` in `START_PRINT`. The macro handles homing internally.
 
-In **Printer Settings → Machine G-code → Machine start G-code**, update your `START_PRINT` line to pass the model bounding box:
+### 4. Enable "Label objects" in OrcaSlicer
+
+In **Print Settings → Others**, turn on **Label objects** (also called "Identify objects").
+
+This makes OrcaSlicer emit `EXCLUDE_OBJECT_DEFINE` statements at the top of each G-code file. Klipper processes these before executing machine start G-code, which is how the macro knows the print area.
+
+### 5. Update OrcaSlicer machine start G-code
+
+In **Printer Settings → Machine G-code → Machine start G-code**, use:
 
 ```
-START_PRINT EXTRUDER_TEMP=[initial_layer_temperature] BED_TEMP=[bed_temperature] PRINT_MIN_X={first_layer_print_min[0]} PRINT_MIN_Y={first_layer_print_min[1]} PRINT_MAX_X={first_layer_print_max[0]} PRINT_MAX_Y={first_layer_print_max[1]}
+START_PRINT EXTRUDER_TEMP=[initial_layer_temperature] BED_TEMP=[bed_temperature]
 ```
 
-Orca Slicer calculates these coordinates automatically — they are just passed through to the macro.
+**Do not** pass `{first_layer_print_min[0]}` or similar vector variables here — OrcaSlicer's machine start G-code parser rejects that syntax and errors before generating the file.
 
-### 4. Restart Klipper
+### 6. Restart Klipper
 
 ---
 
@@ -123,8 +153,9 @@ sed -i '1s/^START/# START/' /mnt/UDISK/printer_data/config/gcode_macro.cfg
 ## Compatibility
 
 - Tested on Creality K2 Pro with Cryo Tack bed surface (PLA: 35 °C bed / 220 °C nozzle)
-- Requires Orca Slicer (provides `first_layer_print_min` / `first_layer_print_max`)
-- Falls back to the full bed 9×9 if called without parameters
+- Requires OrcaSlicer with **Label objects** enabled
+- Requires `[exclude_object]` in `printer.cfg` (present by default on the K2 Pro)
+- Falls back to full bed 9×9 if no object data is available
 
 ## License
 
