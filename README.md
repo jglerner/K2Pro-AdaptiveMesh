@@ -42,12 +42,13 @@ The macro derives the print area from Klipper's `[exclude_object]` data — the 
 
 **Then the macro:**
 
-1. **Preheats** — bed to **40 °C**, extruder to **140 °C** — before probing.
+1. **Homes** all axes (`G28`) to ensure a known position before probing.
+2. **Preheats** — bed to **40 °C**, extruder to **140 °C** — before probing.
    - 40 °C stabilises the bed surface geometry without the full thermal expansion of print temperatures.
    - 140 °C softens any residual filament on the nozzle so it does not drag across the surface, but is too cold to drip.
-2. Expands the model bounding box by **9 mm on each side**, clamped to bed limits (10–290 mm).
-3. Runs `BED_MESH_CALIBRATE` over that region with `PROBE_COUNT=9,9`.
-4. Saves the result to the `default` profile.
+3. Expands the model bounding box by **9 mm on each side**, clamped to bed limits (10–290 mm).
+4. Runs `BED_MESH_CALIBRATE` over that region with `PROBE_COUNT=9,9`.
+5. Saves the result to the `default` profile.
 
 After the macro completes, `START_PRINT` heats to full print temperatures and begins the print.
 
